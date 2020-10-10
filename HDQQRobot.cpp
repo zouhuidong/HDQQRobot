@@ -5,12 +5,19 @@
 //
 //	by huidong <mailkey@yeah.net>
 //
-//	Ver 0.4
+//	Ver 0.5
 //	创建时间		2020.8.9
-//	最后一次修改	2020.8.20
+//	最后一次修改	2020.8.26
 //
 
 #include "HDQQRobot.h"
+
+// HDQQRobot版本信息
+
+string m_strVersion = "HuiDong QQ Robot Version 0.5";
+float m_fVersion = 0.5;
+
+// 全局变量
 
 HWND m_MsgWnd = NULL;		// QQ消息窗口
 HWND m_SendMsgWnd = NULL;	// QQ发送消息窗口
@@ -21,7 +28,14 @@ POINT m_SendMsgPoint = { 0 };	// 发送消息窗口需要点击的位置
 RECT m_MsgRct = { 0 };			// 消息窗口位置、大小
 RECT m_SendMsgRct = { 0 };		// 发送消息窗口位置、大小
 
-int m_kbDelay = 30; // 因为模拟键盘而必要的延迟时间（ms）
+int m_kbDelay = 50; // 因为模拟键盘而必要的延迟时间（ms）
+
+string m_strMyName;			// 我的QQ昵称
+bool m_bIsGetMyMsg = true;	// 是否要得到我的消息
+
+string m_strQQMsg;	// 所有的QQ消息
+QQMsg m_QQMsgList;	// QQ消息链表头节点
+
 
 // 复制数据至剪切板
 void CopyToClipboard(const char* data)
@@ -94,6 +108,44 @@ void GetTextFromClipboard(char* pStr, int size)
 	}
 }
 
+// 得到HDQQQRobot版本（string）
+string QQGetVersionString()
+{
+	return m_strVersion;
+}
+
+// 得到HDQQQRobot版本（float）
+float QQGetVersionFloat()
+{
+	return m_fVersion;
+}
+
+// 得到QQ消息链表中的头结点
+QQMsg* QQGetMsgHead()
+{
+	return &m_QQMsgList;
+}
+
+// 得到QQ消息链表中的最后一条消息
+QQMsg* QQGetLastMsg()
+{
+	QQMsg* p = QQGetMsgHead();
+	while (p->next != NULL)
+		p = p->next;
+	return p;
+}
+
+// 在QQ消息链表的末尾添加一个节点，返回该节点地址
+QQMsg* QQMsgAddNode()
+{
+	QQMsg* p = new QQMsg;
+	QQMsg* last = QQGetLastMsg();
+	p->prev = last;
+	last->next = p;
+
+	return p;
+}
+
 // 点击某一位置
 void ClickAt(int x, int y)
 {
@@ -103,14 +155,14 @@ void ClickAt(int x, int y)
 }
 
 // 使QQ的消息窗口获得焦点
-void QQGotoMsgWnd()
+void GotoMsgWnd()
 {
 	SetWindowPos(m_MsgWnd, HWND_TOP, m_MsgRct.left, m_MsgRct.top, m_MsgRct.right - m_MsgRct.left, m_MsgRct.bottom - m_MsgRct.top, NULL);
 	ClickAt(m_MsgPoint.x + rand() % 2, m_MsgPoint.y + rand() % 2);	// 鼠标点击处需要不时有少许偏差
 }
 
 // 使QQ发送消息的窗口获得焦点
-void QQGotoSendMsgWnd()
+void GotoSendMsgWnd()
 {
 	SetWindowPos(m_SendMsgWnd, HWND_TOP, m_SendMsgRct.left, m_SendMsgRct.top, m_SendMsgRct.right - m_SendMsgRct.left, m_SendMsgRct.bottom - m_SendMsgRct.top, NULL);
 	ClickAt(m_SendMsgPoint.x, m_SendMsgPoint.y);
@@ -178,7 +230,7 @@ void VK_Right()
 // 向QQ发送消息的窗口添加待发送的消息（文字）
 void QQAddMsg(string msg)
 {
-	QQGotoSendMsgWnd();
+	GotoSendMsgWnd();
 
 	CopyToClipboard(msg.c_str());
 
@@ -192,7 +244,7 @@ void QQAddMsg(string msg)
 // 向QQ发送消息的窗口添加待发送的消息（图像）
 void QQAddMsg(HBITMAP bitmap_msg)
 {
-	QQGotoSendMsgWnd();
+	GotoSendMsgWnd();
 
 	CopyHBitmapToClipboard(bitmap_msg);
 
@@ -206,7 +258,7 @@ void QQAddMsg(HBITMAP bitmap_msg)
 // 将QQ发送消息的窗口内的消息发送（清除QQ发送消息缓冲区）
 void QQFlushMsg()
 {
-	QQGotoSendMsgWnd();
+	GotoSendMsgWnd();
 	VK_Enter();
 }
 
@@ -259,7 +311,9 @@ void QQStartMenu()
 	POINT MsgPoint, SendMsgPoint;
 	RECT MsgRct, SendMsgRct;
 
-	printf("QQ Robot - by huidong \n");
+	string str_rot = QQGetVersionString() + "\n";
+
+	printf(str_rot.c_str());
 
 	printf(
 		"\n"
@@ -291,7 +345,7 @@ void QQStartMenu()
 
 	while (!(GetKeyState(VK_F10) & 0x80));
 
-	QQGotoMsgWnd();
+	GotoMsgWnd();
 
 	printf("\n机器人启动。\n");
 	printf("按下F8键时，暂停机器人。\n");
@@ -483,9 +537,45 @@ string& replace_all(string& str, const  string& old_value, const  string& new_va
 	return   str;
 }
 
+// 删除名字前缀
+// 如"【潜水】huidong"
+// 将改为"huidong"
+string DelNamePrefix(string name)
+{
+	string new_name;
 
-// 分析QQ消息（取最后一条消息）
-void QQLexMessage(string strMsg, QQMsg* list)
+	char LeftBracket[3] = { 0 };
+	LeftBracket[0] = name[0];
+	LeftBracket[1] = name[1];
+
+	char RightBracket[] = "】";
+
+	if (strcmp(LeftBracket, "【") == 0)
+	{
+		UINT i;
+		for (i = 2; i < name.size(); i++)
+		{
+			if (name[i] == RightBracket[0] && name[i + 1] == RightBracket[1])
+			{
+				break;
+			}
+		}
+
+		for (UINT j = i + 2; j < name.size(); j++)
+		{
+			new_name += name[j];
+		}
+	}
+	else
+	{
+		new_name = name;
+	}
+	
+	return new_name;
+}
+
+// 分析QQ消息（取最后一条消息加入QQ消息链表）
+void LexMessage(string strMsg)
 {
 	// 删除所有\r
 	replace_all(strMsg, "\r", "");
@@ -608,8 +698,11 @@ void QQLexMessage(string strMsg, QQMsg* list)
 					reverse(strName.begin(), strName.end());
 					reverse(strOneMsg.begin(), strOneMsg.end());
 
+					// 删除名字前缀
+					strName = DelNamePrefix(strName);
+
 					// 写入链表
-					QQMsg* last = QQMsgAddNode(list);
+					QQMsg* last = QQMsgAddNode();
 
 					last->name = strName;
 					last->msg = strOneMsg;
@@ -629,13 +722,38 @@ void QQLexMessage(string strMsg, QQMsg* list)
 	}
 }
 
+// 设置我的昵称
+void QQSetMyName(string strName)
+{
+	m_strMyName = strName;
+}
 
-// 得到QQ消息（所有）
+// 得到我的昵称（前提是我设置过了昵称，而不是真的能得到用户的名称）
+string QQGetMyName()
+{
+	return m_strMyName;
+}
+
+// 设置是否需要获取我发送的消息
+// 如果不得到，那么QQGetMsg得到我的消息时返回false，但仍将消息存入链表
+void QQSetIsGetMyMsg(bool isGetMyMsg)
+{
+	m_bIsGetMyMsg = isGetMyMsg;
+}
+
+// 得到当前是否获取我发送的消息
+bool QQGetIsGetMyMsg()
+{
+	return m_bIsGetMyMsg;
+}
+
+
+// 得到QQ消息（请使用QQMsgGetLast函数得到最后一条QQ消息）
 // 如果有新消息，则返回true
 // 否则返回false
-bool QQGetMsg(string & msg)
+bool QQGetMsg()
 {
-	QQGotoMsgWnd();
+	GotoMsgWnd();
 
 	// ctrl+a, ctrl + c
 	VK_Ctrl_A();
@@ -653,18 +771,65 @@ bool QQGetMsg(string & msg)
 
 	if (strNewMsg.size())
 	{
-		if (strNewMsg != msg)
+		if (strNewMsg != m_strQQMsg)
 		{
-			msg = strNewMsg;
+			m_strQQMsg = strNewMsg;
+
+			LexMessage(m_strQQMsg);
+			
+			if (!QQGetIsGetMyMsg())
+			{
+				if (QQGetLastMsg()->name == QQGetMyName())
+				{
+					return false;
+				}
+			}
+
 			return true;
 		}
-		else
+	}
+	
+	return false;
+}
+
+
+// QQ机器人的MessageBox
+// strMessage：消息内容
+//
+// 返回true表示用户输入确定，返回false表示用户输入取消
+bool QQMessageBox(string strMessage)
+{
+	strMessage += "\n请输入：y（确定） / n（取消）";
+	QQSendMsg(strMessage);
+
+	while (true)
+	{
+		if (QQIsEnd())
 		{
 			return false;
 		}
-	}
-	else
-	{
-		return false;
+
+		QQIsPause();
+
+		if (!QQGetMsg())
+		{
+			continue;
+		}
+
+		string reply = QQGetLastMsg()->msg;
+
+		if (reply == "y" || reply == "确定")
+		{
+			return true;
+		}
+		else if (reply == "n" || reply == "取消")
+		{
+			return false;
+		}
+		else
+		{
+			QQSendMsg("输入格式错误，请重新输入");
+			QQSendMsg(strMessage);
+		}
 	}
 }

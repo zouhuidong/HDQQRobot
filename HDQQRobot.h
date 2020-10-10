@@ -5,9 +5,9 @@
 //
 //	by huidong <mailkey@yeah.net>
 //
-//	Ver 0.4
+//	Ver 0.5
 //	创建时间		2020.8.9
-//	最后一次修改	2020.8.20
+//	最后一次修改	2020.8.26
 //
 
 #pragma once
@@ -43,14 +43,19 @@ struct QQMsg
 
 // functions
 
+string QQGetVersionString();
+float QQGetVersionFloat();
+
+void QQSetMyName(string strName);
+string QQGetMyName();
+
+void QQSetIsGetMyMsg(bool isGetMyMsg);
+bool QQGetIsGetMyMsg();
+
 void QQSetKbDelay(int ms);
 int QQGetKbDelay();
 
-void QQGotoMsgWnd();
-void QQGotoSendMsgWnd();
-
-bool QQGetMsg(string & msg);
-void QQLexMessage(string strMsg, QQMsg* list);
+bool QQGetMsg();
 
 void QQAddMsg(string msg);
 void QQAddMsg(HBITMAP bitmap_msg);
@@ -59,8 +64,8 @@ void QQFlushMsg();
 void QQSendMsg(string msg);
 void QQSendMsg(HBITMAP bitmap_msg);
 
-QQMsg* QQMsgGetLast(QQMsg* list);
-QQMsg* QQMsgAddNode(QQMsg* list);
+QQMsg* QQGetMsgHead();
+QQMsg* QQGetLastMsg();
 
 
 // default function
@@ -69,3 +74,7 @@ void QQStartMenu();
 bool QQIsEnd();
 void QQIsPause();
 
+
+// Others
+
+bool QQMessageBox(string strMessage);
