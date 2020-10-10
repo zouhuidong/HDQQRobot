@@ -1,49 +1,95 @@
 #include "HDQQRobot.h"
+#include "game.h"
 
+#include "EasyXHBitmap.h"
+
+// »Ø¸´ÏûÏ¢
 void Reply(QQMsg list)
 {
-	// å¾—åˆ°æœ€åä¸€æ¡æ¶ˆæ¯
+	// µÃµ½×îºóÒ»ÌõÏûÏ¢
 	QQMsg msg = *QQMsgGetLast(&list);
-	
-	// è‡ªå·±è¯´çš„è¯åˆ™ä¸äºˆåˆ¤æ–­
+
+	IMAGE img;
+	SetWorkingImage(&img);
+	setbkcolor(WHITE);
+	settextcolor(BLACK);
+
+	// ×Ô¼ºËµµÄ»°Ôò²»ÓèÅĞ¶Ï
 	if (msg.name == "huidong")
 	{
-		return;
+		//return;
 	}
 
 	string strReply;
 
-	strReply = msg.name + "è¯´ï¼š" + msg.msg;
-	QQSendMsg(strReply.c_str());
+	if (msg.msg == "Ç©µ½")
+	{
+		char h[3];
+		char m[3];
+		char s[3];
+		_itoa_s(msg.h, h, 10);
+		_itoa_s(msg.min, m, 10);
+		_itoa_s(msg.s, s, 10);
+
+		strReply = "@" + msg.name + "\nÄãÔÚ" + h + ":" + m + ":" + s + "³É¹¦Ç©µ½";
+
+		Resize(&img, 200, 50);
+		cleardevice();
+
+		wchar_t wch[128] = { 0 };
+		MultiByteToWideChar(CP_ACP, 0, strReply.c_str(), strlen(strReply.c_str()), wch, strlen(strReply.c_str()));    //ch×ª»»µ½wch
+
+		RECT rct = { 0,0,200,50 };
+		drawtext(wch, &rct, DT_LEFT);
+
+		QQAddMsg(GetImageHBitmap(img));
+		QQAddMsg("Ç©µ½³É¹¦");
+		QQFlushMsg();
+	}
+
+	// ÓÎÏ·Ö¸ÁîÇø
+	else if (msg.msg[0] == '.')
+	{
+		GameResponse(list);
+	}
+
+	else
+	{
+		strReply = msg.name + "Ëµ£º" + msg.msg;
+		//QQSendMsg(strReply.c_str());
+	}
 }
 
 
 int main()
 {
-	// ä½¿ç”¨é¢„å®šä¹‰çš„å¯åŠ¨èœå•
+	// Ê¹ÓÃÔ¤¶¨ÒåµÄÆô¶¯²Ëµ¥
 	QQStartMenu();
 
+	// ±£´æµÃµ½µÄQQÏûÏ¢
 	string msg;
+
+	// QQÏûÏ¢Á´±íÍ·
 	QQMsg head;
 
 	while (true)
-	{	
-		// ä½¿ç”¨é¢„å®šä¹‰çš„å‡½æ•°åˆ¤æ–­æœºå™¨äººæ˜¯å¦éœ€è¦ç»“æŸ
+	{
+		// Ê¹ÓÃÔ¤¶¨ÒåµÄº¯ÊıÅĞ¶Ï»úÆ÷ÈËÊÇ·ñĞèÒª½áÊø
 		if (QQIsEnd())
 		{
 			break;
 		}
 
-		// ä½¿ç”¨é¢„å®šä¹‰çš„å‡½æ•°åˆ¤æ–­æœºå™¨äººæ˜¯å¦éœ€è¦æš‚åœ
+		// Ê¹ÓÃÔ¤¶¨ÒåµÄº¯ÊıÅĞ¶Ï»úÆ÷ÈËÊÇ·ñĞèÒªÔİÍ£
 		QQIsPause();
 
-		// å¾—åˆ°æ‰€æœ‰QQæ¶ˆæ¯
+		// µÃµ½ËùÓĞQQÏûÏ¢
 		if (QQGetMsg(msg))
 		{
-			// åˆ†ææ­¤QQæ¶ˆæ¯å¹¶åŠ å…¥é“¾è¡¨
+			// ·ÖÎö´ËQQÏûÏ¢²¢¼ÓÈëÁ´±í
 			QQLexMessage(msg, &head);
 
-			// è°ƒç”¨å“åº”å‡½æ•°
+			// µ÷ÓÃÏìÓ¦º¯Êı
 			Reply(head);
 		}
 	}
