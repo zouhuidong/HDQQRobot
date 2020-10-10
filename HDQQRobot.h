@@ -5,9 +5,9 @@
 //
 //	by huidong <mailkey@yeah.net>
 //
-//	Ver 0.2
+//	Ver 0.3
 //	创建时间		2020.8.9
-//	最后一次修改	2020.8.9
+//	最后一次修改	2020.8.19
 //
 
 #pragma once
@@ -21,26 +21,45 @@
 using namespace std;
 
 
+// type define
+
+struct QQMsg
+{
+	string name;
+	string msg;
+	
+	int y;
+	int m;
+	int d;
+	int h;
+	int min;
+	int s;
+
+	QQMsg* prev = NULL;
+	QQMsg* next = NULL;
+};
+
+
 // functions
 
-void HDQQSetResponseFunc(void (*func)(const char*));
-void* HDQQGetResponseFunc();
+void QQSetKbDelay(int ms);
+int QQGetKbDelay();
 
-void HDQQSetKbDelay(int ms);
-int HDQQGetKbDelay();
+void QQGotoMsgWnd();
+void QQGotoSendMsgWnd();
 
-void HDQQGotoMsgWnd();
-void HDQQGotoSendMsgWnd();
+bool QQGetMsg(string & msg);
+void QQLexMessage(string strMsg, QQMsg* list);
 
-void HDQQGetMsg(char* msg, const int size);
-void HDQQLexMessage(const char* pMessage);
+void QQSendMsg(string msg);
 
-void HDQQSendMsg(const char* msg);
+QQMsg* QQMsgGetLast(QQMsg* list);
+QQMsg* QQMsgAddNode(QQMsg* list);
 
 
 // default function
 
-void HDQQStartMenu();
-bool HDQQIsEnd();
-void HDQQIsPause();
+void QQStartMenu();
+bool QQIsEnd();
+void QQIsPause();
 
