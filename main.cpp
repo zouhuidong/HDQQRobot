@@ -1,176 +1,124 @@
 #include "HDQQRobot.h"
 
-char map[6][11] = {
+#define SIZE 204800
 
-"##########",
-"# # #    #",
-"#     ####",
-"#  # #   #",
-"## #   #  ",
-"##########"
+char msg[SIZE] = { 0 };
 
-};
+int number_1, cnt_1;
+bool isin_1;
 
-int born_x = 1;
-int born_y = 1;
-
-int x = born_x;
-int y = born_y;
-
-int win_x = 9;
-int win_y = 4;
-
-bool isPlay = false;
-
-
-void PrintMap()
+void ReturnMsg(const char* msg)
 {
-	string str;
+	string strReturn;
 
-	// y
-	for (int i = 0; i < 6; i++)
+	if (!strcmp(msg, "菜单"))
 	{
-		// x
-		for (int j = 0; j < 10; j++)
+		strReturn =  "\
+输入名称进行相应的操作\r\n\r\n\
+1.猜数字\r\n\
+2.暂无\r\n\
+3.暂无";
+	}
+	if (!strcmp(msg, "猜数字"))
+	{
+		if (isin_1)
 		{
-			if (i == y && j == x)
+			isin_1 = false;
+			cnt_1 = 0;
+			strReturn = "——猜数字游戏结束——";
+		}
+		srand(time(NULL));
+		number_1 = /*rand() % 1000 + 1*/666;
+		isin_1 = true;
+		strReturn = "\
+————猜数字游戏开始————\r\n\r\n\
+我先想一个1~1000之间的数字，你\r\n\
+来猜。我会说大了、小了或者对了\
+";
+	}
+	if (isin_1)
+	{
+		int in = 0, cnt = 1, length = strlen(msg);
+		bool isnumber = true;
+		for (int i = length - 1; i >= 0; i--)
+		{
+			if (!(msg[i] >= '0' && msg[i] <= '9'))
 			{
-				str += '@';
+				isnumber = false;
+				break;
 			}
-			else if(map[i][j] == ' ')
+			in += (msg[i] - '0') * cnt;
+			cnt *= 10;
+		}
+		if (isnumber)
+		{
+			if (in > number_1)
 			{
-				str += "  ";
+				strReturn = "大了";
+				cnt_1++;
 			}
-			else
+			if (in < number_1)
 			{
-				str += map[i][j];
+				strReturn = "小了";
+				cnt_1++;
+			}
+			if (in == number_1)
+			{
+				cnt_1++;
+				char* re;
+				re = new char[1024];
+				memset(re, 0, sizeof(re));
+				sprintf(re, "\
+对了!总共猜了%d次      \r\n\r\n\
+——猜数字游戏结束——",cnt_1);
+				isin_1 = false;
+				cnt_1 = 0;
+				strReturn = re;
 			}
 		}
-		str += '\n';
 	}
-
-	HDQQSendMsg(str.c_str());
-
-	// 胜利判断
-	if (x == win_x && y == win_y)
+	if (strstr(msg, "草") || strstr(msg, "牛逼") || strstr(msg, "艹") || strstr(msg, "草泥马")
+		|| strstr(msg, "WTF") || strstr(msg, "Wtf") || strstr(msg, "wtf")
+		|| strstr(msg, "靠") || strstr(msg, "WOC") || strstr(msg, "woc")
+		|| strstr(msg, "我去年买了个表") || strstr(msg, "我去") || strstr(msg, "我去你妈的")
+		|| strstr(msg, "wdnmd") || strstr(msg, "WC") || strstr(msg, "Wc") || strstr(msg, "wC") || strstr(msg, "wc")
+		|| strstr(msg, "卧槽") || strstr(msg, "我操") || strstr(msg, "我草") || strstr(msg, "靠")
+		|| strstr(msg, "淦")
+		|| strstr(msg, "Fuck") || strstr(msg, "fucK") || strstr(msg, "fuck")
+		|| strstr(msg,"F**k") || strstr(msg, "f**K") || strstr(msg, "f**k") || strstr(msg, "F**K")
+		|| strstr(msg,"贱"))
 	{
-		HDQQSendMsg("你通关啦~~！");
-		HDQQSendMsg("迷宫游戏——制作：huidong");
+		strReturn = "请不要说脏话";
 	}
+	
+	HDQQSendMsg(strReturn.c_str());
 }
 
-void Born()
+int jiec(int n)
 {
-	x = born_x;
-	y = born_y;
+	if (n == 1)
+	{
+		return 1;
+	}
+	return n * jiec(n - 1);
 }
-
-void ResponseMsg(const char* msg)
-{
-	string strMsg = msg;
-	string strReply;
-
-	if (strMsg == "awa")
-	{
-		HDQQSendMsg("喂，是110吗？这里有人卖萌");
-	}
-
-	// 迷宫
-	else if (strMsg == "迷宫")
-	{
-		if (isPlay)
-		{
-			HDQQSendMsg("迷宫游戏关闭！");
-			Born();
-		}
-		else
-		{
-			HDQQSendMsg("迷宫游戏开启！\n再次输入\"迷宫\"来关闭游戏。\n输入上下左右来控制角色移动。\n玩的开心！\n——huidong");
-
-			PrintMap();
-		}
-
-		isPlay = !isPlay;
-	}
-
-	if (isPlay)
-	{
-		char Wall[] = "呀，你这人怎么怼墙壁啊，讨厌啦~ 那就重新开始好咯。";
-
-		if (strMsg == "上")
-		{
-			if (map[y - 1][x] == ' ')
-			{
-				y--;
-			}
-			else
-			{
-				HDQQSendMsg(Wall);
-				Born();
-			}
-			PrintMap();
-		}
-		else if (strMsg == "下")
-		{
-			if (map[y + 1][x] == ' ')
-			{
-				y++;
-			}
-			else
-			{
-				HDQQSendMsg(Wall);
-				Born();
-			}
-			PrintMap();
-		}
-		else if (strMsg == "左")
-		{
-			if (map[y][x - 1] == ' ')
-			{
-				x--;
-			}
-			else
-			{
-				HDQQSendMsg(Wall);
-				Born();
-			}
-			PrintMap();
-		}
-		else if (strMsg == "右")
-		{
-			if (map[y][x + 1] == ' ')
-			{
-				x++;
-			}
-			else
-			{
-				HDQQSendMsg(Wall);
-				Born();
-			}
-			PrintMap();
-		}
-	}
-
-}
-
 
 int main()
 {
-	HDQQSetResponseFunc(ResponseMsg);
 	HDQQStartMenu();
+	
+	HDQQSetResponseFunc(ReturnMsg);
 
-	const int size = 1024000;
-	char msg[size] = { 0 };
-
-	while (true)
+	while (1)
 	{
-		if (HDQQIsEnd())
-		{
-			break;
-		}
+		HDQQGetMsg(msg, SIZE);
 
-		HDQQGetMsg(msg, size);
 		HDQQLexMessage(msg);
+
+		HDQQIsPause();
+
+		if (HDQQIsEnd())
+			break;
 	}
 
 	return 0;
