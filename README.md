@@ -16,7 +16,7 @@ http://www.huidong.xyz/?mode=2&id=137
 
 ### 操作说明：
 
-![]http://www-x-huidong-x-xyz.img.abc188.com/ueditor/php/upload/image/20200809/1596963155321576.png
+![](http://www-x-huidong-x-xyz.img.abc188.com/ueditor/php/upload/image/20200809/1596963155321576.png)
 
 首先：将鼠标移动到QQ消息窗口上，按下F11，注意：按下F11的时候不需要点击cmd窗口，程序会全局捕获按键，下面也一样，按键都是全局捕获的。
 
@@ -28,7 +28,7 @@ http://www.huidong.xyz/?mode=2&id=137
 
 如下图：
 
-![]http://www-x-huidong-x-xyz.img.abc188.com/ueditor/php/upload/image/20200809/1596962955344082.png
+![](http://www-x-huidong-x-xyz.img.abc188.com/ueditor/php/upload/image/20200809/1596962955344082.png)
 
 然后按下F10开启机器人
 
