@@ -5,7 +5,7 @@
 //
 //	by huidong <mailkey@yeah.net>
 //
-//	Ver 0.1
+//	Ver 0.2
 //	创建时间		2020.8.9
 //	最后一次修改	2020.8.9
 //
@@ -175,6 +175,7 @@ void HDQQStartMenu()
 	HDQQGotoMsgWnd();
 
 	printf("\n机器人启动。\n");
+	printf("按下F8键时，暂停机器人。\n");
 	printf("按下F9键时，关闭机器人。\n");
 }
 
@@ -190,6 +191,18 @@ bool HDQQIsEnd()
 		return true;
 	}
 	return false;
+}
+
+// 预定义函数：是否暂停机器人（不返回值），如果按下暂停按键则自动处理暂停
+void HDQQIsPause()
+{
+	if (GetKeyState(VK_F8) & 0x80)
+	{
+		printf("\nF8键已按下，机器人暂停工作，按F7继续。\n\n");
+		
+		while(!(GetKeyState(VK_F7) & 0x80));
+		printf("\nF7键已按下，机器人继续工作。\n\n");
+	}
 }
 
 // 设置消息响应函数（也相当于初始化函数）
@@ -225,10 +238,10 @@ void HDQQLexMessage(const char* pMessage)
 
 	int sub = 1;
 
-	// 去除最末尾的\n
+	// 去除最末尾的换行
 	for (int i = len - sub; i >= 0; i--)
 	{
-		if (pMessage[i] == '\n')
+		if (pMessage[i] == '\n' || pMessage[i] == '\r')
 		{
 			sub++;
 		}
@@ -304,28 +317,3 @@ void HDQQGetMsg(char* msg, const int size)
 
 	delete[] new_msg;
 }
-
-
-/*
-int main()
-{
-	StartMenu();
-
-	const int size = 1024000;
-	char pMessage[size] = { 0 };
-
-	while (true)
-	{
-		if (isEnd())
-		{
-			break;
-		}
-
-		GetQQMsg(pMessage, size);
-		LexMessage(pMessage);
-	}
-
-	return 0;
-}
-*/
-

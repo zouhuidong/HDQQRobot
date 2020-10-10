@@ -5,7 +5,7 @@
 //
 //	by huidong <mailkey@yeah.net>
 //
-//	Ver 0.1
+//	Ver 0.2
 //	创建时间		2020.8.9
 //	最后一次修改	2020.8.9
 //
@@ -42,4 +42,5 @@ void HDQQSendMsg(const char* msg);
 
 void HDQQStartMenu();
 bool HDQQIsEnd();
+void HDQQIsPause();
 
