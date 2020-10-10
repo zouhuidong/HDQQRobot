@@ -5,9 +5,9 @@
 //
 //	by huidong <mailkey@yeah.net>
 //
-//	Ver 0.3
+//	Ver 0.4
 //	创建时间		2020.8.9
-//	最后一次修改	2020.8.19
+//	最后一次修改	2020.8.20
 //
 
 #include "HDQQRobot.h"
@@ -21,7 +21,7 @@ POINT m_SendMsgPoint = { 0 };	// 发送消息窗口需要点击的位置
 RECT m_MsgRct = { 0 };			// 消息窗口位置、大小
 RECT m_SendMsgRct = { 0 };		// 发送消息窗口位置、大小
 
-int m_kbDelay = 50; // 因为模拟键盘而必要的延迟时间（ms）
+int m_kbDelay = 30; // 因为模拟键盘而必要的延迟时间（ms）
 
 // 复制数据至剪切板
 void CopyToClipboard(const char* data)
@@ -56,6 +56,17 @@ void CopyToClipboard(const char* data)
 		SetClipboardData(CF_TEXT, hClip);
 
 		// 关闭剪贴板，释放剪贴板资源的占用权
+		CloseClipboard();
+	}
+}
+
+// 复制图像数据至剪切板
+void CopyHBitmapToClipboard(HBITMAP data)
+{
+	if (OpenClipboard(NULL))
+	{
+		EmptyClipboard();
+		SetClipboardData(CF_BITMAP, data);
 		CloseClipboard();
 	}
 }
@@ -105,13 +116,35 @@ void QQGotoSendMsgWnd()
 	ClickAt(m_SendMsgPoint.x, m_SendMsgPoint.y);
 }
 
-// 发送QQ消息
-void QQSendMsg(string msg)
+// 按下Ctrl+a
+void VK_Ctrl_A()
 {
-	QQGotoSendMsgWnd();
+	keybd_event(VK_CONTROL, 0, 0, 0);
+	Sleep(m_kbDelay);
+	keybd_event('A', 0, 0, 0);
+	Sleep(m_kbDelay);
+	keybd_event('A', 0, KEYEVENTF_KEYUP, 0);
+	keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
 
-	CopyToClipboard(msg.c_str());
+	Sleep(m_kbDelay);
+}
 
+// 按下Ctrl+c
+void VK_Ctrl_C()
+{
+	keybd_event(VK_CONTROL, 0, 0, 0);
+	Sleep(m_kbDelay);
+	keybd_event('C', 0, 0, 0);
+	Sleep(m_kbDelay);
+	keybd_event('C', 0, KEYEVENTF_KEYUP, 0);
+	keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
+
+	Sleep(m_kbDelay);
+}
+
+// 按下Ctrl+v
+void VK_Ctrl_V()
+{
 	keybd_event(VK_CONTROL, 0, 0, 0);
 	Sleep(m_kbDelay);
 	keybd_event('V', 0, 0, 0);
@@ -120,10 +153,75 @@ void QQSendMsg(string msg)
 	keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
 
 	Sleep(m_kbDelay);
+}
 
+// 按下回车
+void VK_Enter()
+{
 	keybd_event(VK_RETURN, 0, 0, 0);
 	Sleep(m_kbDelay);
 	keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0);
+
+	Sleep(m_kbDelay);
+}
+
+// 按下右方向键
+void VK_Right()
+{
+	keybd_event(VK_RIGHT, 0, 0, 0);
+	Sleep(m_kbDelay);
+	keybd_event(VK_RIGHT, 0, KEYEVENTF_KEYUP, 0);
+
+	Sleep(m_kbDelay);
+}
+
+// 向QQ发送消息的窗口添加待发送的消息（文字）
+void QQAddMsg(string msg)
+{
+	QQGotoSendMsgWnd();
+
+	CopyToClipboard(msg.c_str());
+
+	VK_Ctrl_A();
+	VK_Right();
+	VK_Ctrl_V();
+
+	Sleep(m_kbDelay);
+}
+
+// 向QQ发送消息的窗口添加待发送的消息（图像）
+void QQAddMsg(HBITMAP bitmap_msg)
+{
+	QQGotoSendMsgWnd();
+
+	CopyHBitmapToClipboard(bitmap_msg);
+
+	VK_Ctrl_A();
+	VK_Right();
+	VK_Ctrl_V();
+
+	Sleep(m_kbDelay);
+}
+
+// 将QQ发送消息的窗口内的消息发送（清除QQ发送消息缓冲区）
+void QQFlushMsg()
+{
+	QQGotoSendMsgWnd();
+	VK_Enter();
+}
+
+// 直接发送一条QQ消息
+void QQSendMsg(string msg)
+{
+	QQAddMsg(msg);
+	QQFlushMsg();
+}
+
+// 直接发送一条QQ消息（图片）
+void QQSendMsg(HBITMAP bitmap_msg)
+{
+	QQAddMsg(bitmap_msg);
+	QQFlushMsg();
 }
 
 // 设置QQ消息窗口位置
@@ -199,7 +297,6 @@ void QQStartMenu()
 	printf("按下F8键时，暂停机器人。\n");
 	printf("按下F9键时，关闭机器人。\n");
 }
-
 
 // 预定义函数：是否退出机器人，返回ture表示要退出机器人
 bool QQIsEnd()
@@ -401,7 +498,7 @@ void QQLexMessage(string strMsg, QQMsg* list)
 	// 去除最末尾的换行
 	for (int i = len - sub; i >= 0; i--)
 	{
-		if (strMsg[i] == '\n' || strMsg[i] == '\r')
+		if (strMsg[i] == '\n')
 			sub++;
 		else
 			break;
@@ -438,7 +535,7 @@ void QQLexMessage(string strMsg, QQMsg* list)
 
 	for (int i = len - sub; i >= 0; i--)
 	{
-		if (strMsg[i] == '\n' || i == 0)
+		if (i == len - sub || strMsg[i] == '\n' || i == 0)
 		{
 			// 判断接下来的格式是否为正确的时间格式（xx:xx:xx）、用户名格式
 
@@ -458,8 +555,13 @@ void QQLexMessage(string strMsg, QQMsg* list)
 			int date_len;
 			int name_len;
 
+			if (i == len - sub)
+				time_len = 0;
+			else
+				time_len = 1;
+
 			// 得到一段以空格结尾的字符串，即时间
-			for (time_len = 1; i - time_len >= 0 && strMsg[i - time_len] != ' ' && strMsg[i - time_len] != '\n'; time_len++)
+			for (; i - time_len >= 0 && strMsg[i - time_len] != ' ' && strMsg[i - time_len] != '\n'; time_len++)
 			{
 				strTime += strMsg[i - time_len];
 			}
@@ -536,22 +638,8 @@ bool QQGetMsg(string & msg)
 	QQGotoMsgWnd();
 
 	// ctrl+a, ctrl + c
-	keybd_event(VK_CONTROL, 0, 0, 0);
-	Sleep(m_kbDelay);
-	keybd_event('A', 0, 0, 0);
-	Sleep(m_kbDelay);
-	keybd_event('A', 0, KEYEVENTF_KEYUP, 0);
-	keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
-
-	Sleep(m_kbDelay);
-
-	keybd_event(VK_CONTROL, 0, 0, 0);
-	Sleep(m_kbDelay);
-	keybd_event('C', 0, 0, 0);
-	Sleep(m_kbDelay);
-	keybd_event('C', 0, KEYEVENTF_KEYUP, 0);
-	keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
-	// end
+	VK_Ctrl_A();
+	VK_Ctrl_C();
 
 	const int size = 2048000;
 	char* new_msg = new char[size];
@@ -563,7 +651,7 @@ bool QQGetMsg(string & msg)
 
 	delete[] new_msg;
 
-	if (new_msg)
+	if (strNewMsg.size())
 	{
 		if (strNewMsg != msg)
 		{
@@ -574,5 +662,9 @@ bool QQGetMsg(string & msg)
 		{
 			return false;
 		}
+	}
+	else
+	{
+		return false;
 	}
 }

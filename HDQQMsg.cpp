@@ -5,9 +5,9 @@
 //
 //	by huidong <mailkey@yeah.net>
 //
-//	Ver 0.3
+//	Ver 0.4
 //	创建时间		2020.8.9
-//	最后一次修改	2020.8.19
+//	最后一次修改	2020.8.20
 //
 
 #include "HDQQRobot.h"

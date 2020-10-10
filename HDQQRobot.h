@@ -5,9 +5,9 @@
 //
 //	by huidong <mailkey@yeah.net>
 //
-//	Ver 0.3
+//	Ver 0.4
 //	创建时间		2020.8.9
-//	最后一次修改	2020.8.19
+//	最后一次修改	2020.8.20
 //
 
 #pragma once
@@ -23,6 +23,7 @@ using namespace std;
 
 // type define
 
+// QQ消息链表结构体
 struct QQMsg
 {
 	string name;
@@ -51,7 +52,12 @@ void QQGotoSendMsgWnd();
 bool QQGetMsg(string & msg);
 void QQLexMessage(string strMsg, QQMsg* list);
 
+void QQAddMsg(string msg);
+void QQAddMsg(HBITMAP bitmap_msg);
+void QQFlushMsg();
+
 void QQSendMsg(string msg);
+void QQSendMsg(HBITMAP bitmap_msg);
 
 QQMsg* QQMsgGetLast(QQMsg* list);
 QQMsg* QQMsgAddNode(QQMsg* list);
