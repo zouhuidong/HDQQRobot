@@ -26,6 +26,7 @@ int main()
 	QQStartMenu();
 
 	string str;
+	char num[12] = { 0 };
 	int n = 1;
 
 	while(true)
@@ -39,13 +40,17 @@ int main()
 		QQIsPause();
 
 		str = "[戳";
-		str += itoa(n, NULL, 10);
+		memset(num, 0, 12);
+		_itoa_s(n, num, 12, 10);
+		str += num;
 		str += "戳]请使用新版手机QQ查看";
 
 		// 输出消息
 		QQSendMsg(str);
 
-		Sleep(800);
+		Sleep(200);
+
+		n++;
 	}
 	
 	return 0;
