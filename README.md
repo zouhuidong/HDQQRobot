@@ -1,5 +1,10 @@
 # HDQQRobot
+![Downloads](https://img.shields.io/github/downloads/zouhuidong/HDQQRobot/total)
+![GitHub Version](https://img.shields.io/github/v/release/zouhuidong/HDQQRobot)
+[![Blog](https://img.shields.io/badge/blog-huidong.xyz-green.svg)](http://huidong.xyz)
+
 HuiDong QQ Robot —— 非官方接口QQ机器人 
+
 ---
 
 QQ虽然有官方的机器人接口，但是使用它的接口需要申请，很麻烦。 
